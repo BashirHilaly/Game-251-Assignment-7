@@ -32,6 +32,108 @@
     // Editing score
     const renderedScore = document.getElementById("score");
 
+    var player;
+    var playerSpeed = 250;
+    var stars;
+    var starSpeed = 1;
+    var score = 0;
+    var cursors;
+
+    // Start screen scene
+    const Menu = {
+        preload: function () {
+
+        },
+        create: function () {
+            // Additional setup for Scene2
+            const textIntro = this.add.text(400, 100, 'Play this Canvas to Phaser game!', {
+                fontSize: '24px',
+                fill: '#fff'
+            });
+            textIntro.setOrigin(0.5);
+            const text = this.add.text(400, 300, 'Press "SPACE" to play!', 
+                {
+                    fontSize: '24px',
+                    fill: '#fff',
+                    align: 'center',
+                    lineSpacing: '10'
+                }
+            );
+            text.setOrigin(0.5);
+
+            // Set up an event listener for the space key to go back to every scene
+            this.input.keyboard.on('keydown-SPACE', function (event) {
+                console.log('Space Pressed!');
+                this.scene.start('ActualGame');
+            }, this);
+        },
+        update: function () {
+
+        }
+    };
+
+    const ActualGame = {
+        collectStar: function() {
+            star.disableBody(true, true);
+            score += 10;
+            renderedScore.innerHTML = score;
+        },
+        generateStars: function() {
+            var x = Phaser.Math.Between(0, 800);
+            var star = stars.create(x, 0, 'star');
+        },
+        preload: function () {
+            this.load.image('star', 'assets/star.png');
+            this.load.image('ufo', 'assets/ufo.png');
+        },
+        create: function () {
+            // Add player
+            player = this.physics.add.sprite(400, 500, 'ufo').setScale(.2);
+            player.setCollideWorldBounds(true);
+
+            // Add stars group
+            stars = this.physics.add.group({
+                key: 'star',
+                repeat: 4,
+                setXY: { x: Phaser.Math.FloatBetween(5, 40), y: 0, stepX: Phaser.Math.FloatBetween(100, 250) }
+            });
+
+            // Randomize the stars y coordinates
+            stars.children.iterate(function (child) {
+                child.y = Phaser.Math.FloatBetween(-200, 200);
+            });
+
+            // Enable collisions
+            this.physics.add.collider(stars, stars);
+            this.physics.add.collider(stars, player, collectStar, null, this);
+                    
+            // Call generateStars function every second
+            this.time.addEvent({ delay: 1000, callback: generateStars, callbackScope: this, loop: true });
+            
+            // For controls
+            cursors = this.input.keyboard.createCursorKeys();
+        },
+        update: function () {
+            // Make the stars constantly move down
+            stars.children.iterate(function (child) {
+                child.y += starSpeed;
+
+                // if they are out the frame then remove them
+            })
+
+            // Keep the player stationary on the y-axis
+            player.y = 550;
+
+            if (cursors.left.isDown) {
+                player.setVelocityX(-playerSpeed);
+            } else if (cursors.right.isDown) {
+                player.setVelocityX(playerSpeed);
+            } else {
+                player.setVelocityX(0);
+            }
+        }
+    };
+
     // Initialize Phaser
     var config = {
         type: Phaser.AUTO,
@@ -44,87 +146,18 @@
                 debug: false
             }
         },
-        scene: {
-            preload: preload,
-            create: create,
-            update: update
-        }
+        scene: [Menu]
     };
 
     var game = new Phaser.Game(config);
 
-    var player;
-    var playerSpeed = 250;
-    var stars;
-    var starSpeed = 1;
-    var score = 0;
+    // Add both scenes to the game
+    game.scene.add('Menu', Menu);
+    game.scene.add('ActualGame', ActualGame);
 
-    function preload() {
-        this.load.image('star', 'assets/star.png');
-        this.load.image('ufo', 'assets/ufo.png');
-    }
+    // Start the initial scene
+    game.scene.start('Menu');
 
-    function create() {
-
-        // Add player
-        player = this.physics.add.sprite(400, 500, 'ufo').setScale(.2);
-        player.setCollideWorldBounds(true);
-
-        // Add stars group
-        stars = this.physics.add.group({
-            key: 'star',
-            repeat: 4,
-            setXY: { x: Phaser.Math.FloatBetween(5, 40), y: 0, stepX: Phaser.Math.FloatBetween(100, 250) }
-        });
-
-        // Randomize the stars y coordinates
-        stars.children.iterate(function (child) {
-            child.y = Phaser.Math.FloatBetween(-200, 200);
-        });
-
-        // Enable collisions
-        this.physics.add.collider(stars, stars);
-        this.physics.add.collider(stars, player, collectStar, null, this);
-
-                
-        // Call generateStars function every second
-        this.time.addEvent({ delay: 1000, callback: generateStars, callbackScope: this, loop: true });
-    }
-
-    function update() {
-
-        // Make the stars constantly move down
-        stars.children.iterate(function (child) {
-            child.y += starSpeed;
-
-            // if they are out the frame then remove them
-        })
-
-        // Player controls
-        var cursors = this.input.keyboard.createCursorKeys();
-
-        // Keep the player stationary on the y-axis
-        player.y = 550;
-
-        if (cursors.left.isDown) {
-            player.setVelocityX(-playerSpeed);
-        } else if (cursors.right.isDown) {
-            player.setVelocityX(playerSpeed);
-        } else {
-            player.setVelocityX(0);
-        }
-
-    }
-
-    function collectStar(player, star) {
-        star.disableBody(true, true);
-        score += 10;
-        renderedScore.innerHTML = score;
-    }
-    function generateStars() {
-        var x = Phaser.Math.Between(0, 800);
-        var star = stars.create(x, 0, 'star');
-    }
 
 </script>
 
