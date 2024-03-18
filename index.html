@@ -77,6 +77,11 @@
             star.disableBody(true, true);
             score += 10;
             renderedScore.innerHTML = score;
+
+            // If score is greater than 300, you have beat the game and will be returned to the menu
+            if (score > 300) {
+                this.scene.start('Menu');
+            }
         },
         generateStars: function() {
             var x = Phaser.Math.Between(0, 800);
